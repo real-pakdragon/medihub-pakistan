@@ -1,0 +1,97 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ResourceCategory {
+  pre_clinical
+  clinical
+  past_papers
+  video
+  community
+  textbook
+}
+
+enum MessageStatus {
+  new
+  read
+  replied
+}
+
+model Resource {
+  id          String           @id @default(cuid())
+  title       String
+  category    ResourceCategory
+  yearTag     String?          @map("year_tag")
+  iconName    String?          @map("icon_name")
+  description String?
+  links       Json             @default("[]")
+  isPublished Boolean          @default(false) @map("is_published")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@index([category])
+  @@index([isPublished, createdAt])
+  @@map("resources")
+}
+
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    MessageStatus @default(new)
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  @@index([status, createdAt])
+  @@map("contact_messages")
+}
+
+model Subscriber {
+  id                String   @id @default(cuid())
+  email             String   @unique
+  subscribedAt      DateTime @default(now()) @map("subscribed_at")
+  confirmed         Boolean  @default(false)
+  confirmationToken String   @unique @map("confirmation_token")
+
+  @@map("subscribers")
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         String   @default("admin")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("admins")
+}
+
+model PracticeQuestion {
+  id           String   @id @default(cuid())
+  university   String
+  yearTag      String
+  subject      String
+  statement    String
+  options      Json
+  correctIndex Int
+  explanation  String?
+  createdAt    DateTime @default(now())
+
+  @@index([university, yearTag, subject])
+}
+
+model MdcatConfig {
+  id               Int      @id @default(1)
+  launchDate       DateTime @map("launch_date")
+  currentPhase     String   @default("Registration") @map("current_phase")
+  phaseDescription String   @default("") @map("phase_description")
+
+  @@map("mdcat_config")
+}
