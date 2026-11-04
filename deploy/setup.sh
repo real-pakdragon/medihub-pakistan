@@ -79,7 +79,7 @@ services:
       MAIL_FROM: "MediHub Pakistan <no-reply@medihub.pk>"
       # SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS: unset = emails logged to `docker logs medihub-api`
     volumes:
-      - ./data/files:/app/data/files:ro
+      - ./data/files:/app/data/files
     depends_on:
       db:
         condition: service_healthy

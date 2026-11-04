@@ -19,6 +19,19 @@ medihub-pakistan/
 - **Backend**: layered routes → controllers → services, Zod validation, helmet, CORS allow-list, rate limiting on all public POSTs, consistent JSON error shape, HTML sanitisation on text inputs
 - **Emails** via Nodemailer SMTP (works with Resend/SendGrid): contact notification to admin + auto-reply to sender, double opt-in confirmation for subscribers. Without SMTP config, emails are logged to console instead of sent.
 
+## Host it on your own PC (Manjaro / Arch Linux)
+
+No domain or cloud account needed to start. On the PC that will host the site:
+
+```bash
+git clone https://github.com/real-pakdragon/medihub-pakistan.git
+cd medihub-pakistan
+bash deploy/selfhost/setup.sh
+```
+
+The script installs Docker, adds swap, builds the website and starts it on port 80.
+Full plain-English instructions: [`deploy/selfhost/README.md`](deploy/selfhost/README.md).
+
 ## Run on an EC2 instance (one command)
 
 Images are prebuilt on Docker Hub (`irfanjat/medihub-api`, `irfanjat/medihub-web`) — nothing is compiled on the server.

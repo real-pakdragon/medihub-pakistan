@@ -3,3 +3,6 @@ dist/
 .env
 *.log
 backend/data/
+deploy/selfhost/data/
+deploy/selfhost/backups/
+deploy/selfhost/.env

@@ -1,0 +1,72 @@
+name: medihub
+
+# Self-hosting on your own PC (Manjaro / Arch Linux).
+# Run it with:  bash deploy/selfhost/setup.sh
+# The data lives here:
+#   database -> Docker volume "medihub_pgdata"
+#   files    -> deploy/selfhost/data/files
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: docker.io/library/postgres:16-alpine
+    container_name: medihub-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: medihub
+    volumes:
+      - medihub_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d medihub"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging: *logging
+
+  api:
+    build:
+      context: ../../backend
+    container_name: medihub-api
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/medihub?schema=public
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in deploy/selfhost/.env}
+      JWT_EXPIRES_IN: 12h
+      PORT: "5000"
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost}
+      WEB_APP_URL: ${WEB_APP_URL:-http://localhost}
+      API_URL: ${API_URL:-http://localhost}
+      MAIL_FROM: "MediHub Pakistan <no-reply@medihub.pk>"
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@medihub.pk}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-ChangeMe!2024}
+      # Email is optional. Leave SMTP_* unset and messages are only logged.
+    volumes:
+      - ./data/files:/app/data/files
+    # Only create the admin login on first run - no sample content.
+    command: sh -c "npx prisma migrate deploy && node prisma/bootstrap.js && node src/server.js"
+    depends_on:
+      db:
+        condition: service_healthy
+    logging: *logging
+
+  web:
+    build:
+      context: ../../frontend
+    container_name: medihub-web
+    restart: unless-stopped
+    ports:
+      - "80:8080"
+    depends_on:
+      - api
+    logging: *logging
+
+volumes:
+  medihub_pgdata:
