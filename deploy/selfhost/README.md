@@ -80,7 +80,12 @@ Sign in with:
 - **Email:** `admin@medihub.pk`
 - **Password:** `ChangeMe!2024`
 
-> Change the password after your first login.
+> To set your own password, run this in the Terminal:
+>
+> ```bash
+> cd ~/medihub-pakistan/deploy/selfhost
+> bash reset-password.sh
+> ```
 
 To add your books: log in, open **MBBS -> Files & Content**, and upload the PDFs.
 Files are saved on the old PC's hard drive.
@@ -130,6 +135,12 @@ sudo docker compose -f docker-compose.yml up -d
 
 ```bash
 bash update.sh
+```
+
+**Set a new admin password:**
+
+```bash
+bash reset-password.sh
 ```
 
 **See what is wrong if the site does not load:**

@@ -12,7 +12,7 @@ warn() { printf '\n\033[1;33m!!  %s\033[0m\n' "$1"; }
 # ---------------------------------------------------------------- 1. Docker
 if ! command -v docker >/dev/null 2>&1; then
   say "Installing Docker (you may be asked for your password)"
-  sudo pacman -Sy --needed --noconfirm docker docker-compose
+  sudo pacman -S --needed --noconfirm docker docker-compose
   sudo systemctl enable --now docker
 else
   sudo systemctl enable --now docker >/dev/null 2>&1 || true
