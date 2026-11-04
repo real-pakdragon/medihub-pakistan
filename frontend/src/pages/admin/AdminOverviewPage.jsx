@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Inbox, Library, Users } from 'lucide-react';
+import { ArrowRight, BookMarked, FolderTree, Inbox, Library, PenLine, Users } from 'lucide-react';
 
 import { Seo } from '../../components/Seo.jsx';
 import { useAdminStats } from '../../hooks/queries.js';
@@ -8,10 +8,11 @@ export function AdminOverviewPage() {
   const { data: stats } = useAdminStats(true);
 
   const cards = [
-    { label: 'Total resources', value: stats?.resources, to: '/admin/resources', icon: Library },
+    { label: 'MBBS topics', value: stats?.categories, to: '/admin/library', icon: FolderTree },
+    { label: 'Content items', value: stats?.contentItems, to: '/admin/library', icon: Library },
+    { label: 'Blog posts', value: stats?.posts, to: '/admin/library', icon: PenLine },
     { label: 'Contact messages', value: stats?.messages, to: '/admin/messages', icon: Inbox },
     { label: 'New messages', value: stats?.newMessages, to: '/admin/messages', icon: Inbox, highlight: true },
-    { label: 'Subscribers', value: stats?.subscribers, to: '/admin/subscribers', icon: Users },
   ];
 
   return (
@@ -19,7 +20,7 @@ export function AdminOverviewPage() {
       <Seo title="Admin Dashboard" />
       <h1 className="text-xl sm:text-2xl">Dashboard</h1>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map(({ label, value, to, icon: Icon, highlight }) => (
           <Link
             key={label}
@@ -43,8 +44,11 @@ export function AdminOverviewPage() {
       <div className="card-base mt-8 p-7">
         <h2 className="text-base">Quick actions</h2>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Link to="/admin/resources" className="btn-primary !py-2.5 text-sm">
-            <Library size={15} aria-hidden="true" /> Manage resources
+          <Link to="/admin/library" className="btn-primary !py-2.5 text-sm">
+            <FolderTree size={15} aria-hidden="true" /> Manage MBBS
+          </Link>
+          <Link to="/admin/mdcat-res" className="btn-primary !py-2.5 text-sm !bg-brand-mid hover:!bg-brand">
+            <BookMarked size={15} aria-hidden="true" /> Manage MDCAT RES
           </Link>
           <Link to="/admin/mdcat" className="btn-secondary !py-2.5 text-sm">
             Update MDCAT countdown

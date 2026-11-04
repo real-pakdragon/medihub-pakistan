@@ -19,7 +19,7 @@ export function NotFoundPage() {
               Go home
             </Link>
             <Link to="/mbbs" className="btn-secondary">
-              MBBS Library
+              MBBS
             </Link>
           </div>
         </div>

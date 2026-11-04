@@ -42,6 +42,211 @@ export function useResource(id) {
   });
 }
 
+export const bookKeys = {
+  subjects: ['book-subjects'],
+  books: (subject) => ['books', subject ?? 'all'],
+};
+
+export function useBookSubjects() {
+  return useQuery({
+    queryKey: bookKeys.subjects,
+    queryFn: async () => (await api.get('/books/subjects')).data,
+    staleTime: 60_000,
+  });
+}
+
+export function useBooks(subjectSlug) {
+  return useQuery({
+    queryKey: bookKeys.books(subjectSlug),
+    queryFn: () => api.get(`/books${subjectSlug ? `?subject=${subjectSlug}` : ''}`),
+    enabled: Boolean(subjectSlug),
+    placeholderData: (prev) => prev,
+  });
+}
+
+/* ----------------------------- Library (CMS) ----------------------------- */
+
+export const LIBRARY_SECTIONS = {
+  mbbs: { label: 'MBBS', home: '/mbbs', publicRoot: 'library', adminRoot: 'library' },
+  mdcat: { label: 'MDCAT RES', home: '/mdcat-res', publicRoot: 'mdcat-res', adminRoot: 'mdcat-res' },
+};
+
+export const libraryKeys = {
+  browse: (section = 'mbbs') => ['library-browse', section],
+  topic: (section, slug) => ['library-topic', section, slug],
+  post: (section, id) => ['library-post', section, id],
+  recent: (section = 'mbbs') => ['library-recent', section],
+  adminCategories: (section = 'mbbs') => ['admin-categories', section],
+  adminItems: (section, params) => ['admin-items', section, params ?? {}],
+  adminPosts: (section, params) => ['admin-posts', section, params ?? {}],
+};
+
+export function useLibraryBrowse(section = 'mbbs') {
+  return useQuery({
+    queryKey: libraryKeys.browse(section),
+    queryFn: async () => (await api.get(`/${LIBRARY_SECTIONS[section].publicRoot}/browse`)).data,
+    staleTime: 30_000,
+  });
+}
+
+export function useLibraryTopic(slug, section = 'mbbs') {
+  return useQuery({
+    queryKey: libraryKeys.topic(section, slug),
+    queryFn: async () => (await api.get(`/${LIBRARY_SECTIONS[section].publicRoot}/topic/${slug}`)).data,
+    enabled: Boolean(slug),
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useLibraryPost(id, section = 'mbbs') {
+  return useQuery({
+    queryKey: libraryKeys.post(section, id),
+    queryFn: async () => (await api.get(`/${LIBRARY_SECTIONS[section].publicRoot}/post/${id}`)).data,
+    enabled: Boolean(id),
+  });
+}
+
+export function useLibraryRecent(section = 'mbbs') {
+  return useQuery({
+    queryKey: libraryKeys.recent(section),
+    queryFn: async () => (await api.get(`/${LIBRARY_SECTIONS[section].publicRoot}/recent`)).data,
+    staleTime: 60_000,
+  });
+}
+
+function invalidateLibrary(qc, section = 'mbbs') {
+  qc.invalidateQueries({ queryKey: libraryKeys.browse(section) });
+  qc.invalidateQueries({ queryKey: ['library-topic', section] });
+  qc.invalidateQueries({ queryKey: libraryKeys.recent(section) });
+  qc.invalidateQueries({ queryKey: libraryKeys.adminCategories(section) });
+  qc.invalidateQueries({ queryKey: ['admin-items', section] });
+  qc.invalidateQueries({ queryKey: ['admin-posts', section] });
+  qc.invalidateQueries({ queryKey: queryKeys.adminStats });
+}
+
+/* -------- Admin: categories -------- */
+
+export function useAdminCategories(enabled, section = 'mbbs') {
+  return useQuery({
+    queryKey: libraryKeys.adminCategories(section),
+    queryFn: async () => (await api.get(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/categories`)).data,
+    enabled,
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useCreateCategory(section = 'mbbs') {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => api.post(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/categories`, body),
+    onSuccess: () => invalidateLibrary(qc, section),
+  });
+}
+
+export function useUpdateCategory(section = 'mbbs') {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }) => api.put(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/categories/${id}`, body),
+    onSuccess: () => invalidateLibrary(qc, section),
+  });
+}
+
+export function useDeleteCategory(section = 'mbbs') {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => api.del(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/categories/${id}`),
+    onSuccess: () => invalidateLibrary(qc, section),
+  });
+}
+
+/* -------- Admin: items -------- */
+
+export function useAdminItems(params, enabled, section = 'mbbs') {
+  const clean = Object.fromEntries(
+    Object.entries(params ?? {}).filter(([, v]) => v !== '' && v !== undefined && v !== null)
+  );
+  return useQuery({
+    queryKey: libraryKeys.adminItems(section, clean),
+    queryFn: async () =>
+      (await api.get(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/items?${new URLSearchParams({ limit: 100, ...clean })}`)).data,
+    enabled,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useCreateItem(section = 'mbbs') {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => api.post(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/items`, body),
+    onSuccess: () => invalidateLibrary(qc, section),
+  });
+}
+
+export function useUpdateItem(section = 'mbbs') {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }) => api.put(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/items/${id}`, body),
+    onSuccess: () => invalidateLibrary(qc, section),
+  });
+}
+
+export function useDeleteItem(section = 'mbbs') {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => api.del(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/items/${id}`),
+    onSuccess: () => invalidateLibrary(qc, section),
+  });
+}
+
+export function useUploadFile(section = 'mbbs') {
+  return useMutation({
+    mutationFn: (formData) => api.upload(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/upload`, formData),
+  });
+}
+
+/* -------- Admin: blog posts -------- */
+
+export function useAdminPosts(params, enabled, section = 'mbbs') {
+  const clean = Object.fromEntries(
+    Object.entries(params ?? {}).filter(([, v]) => v !== '' && v !== undefined && v !== null)
+  );
+  return useQuery({
+    queryKey: libraryKeys.adminPosts(section, clean),
+    queryFn: async () =>
+      (await api.get(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/posts?${new URLSearchParams({ limit: 100, ...clean })}`)).data,
+    enabled,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useCreatePost(section = 'mbbs') {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body) => api.post(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/posts`, body),
+    onSuccess: () => invalidateLibrary(qc, section),
+  });
+}
+
+export function useUpdatePost(section = 'mbbs') {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...body }) => api.put(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/posts/${id}`, body),
+    onSuccess: () => invalidateLibrary(qc, section),
+  });
+}
+
+export function useDeletePost(section = 'mbbs') {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id) => api.del(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/posts/${id}`),
+    onSuccess: () => invalidateLibrary(qc, section),
+  });
+}
+
 export function useMdcatStatus() {
   return useQuery({
     queryKey: queryKeys.mdcat,

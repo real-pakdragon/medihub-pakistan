@@ -1,0 +1,38 @@
+[
+  {
+    "subject": "biochemistry",
+    "title": "Biochemistry",
+    "author": "U. Satyanarayan & U. Chakrapani",
+    "edition": "4th Edition",
+    "description": "A widely-used introductory biochemistry textbook — clear explanations of biomolecules, metabolism and clinical biochemistry. Ideal for the first-year Biochemistry syllabus.",
+    "filePath": "/files/books/biochemistry/Biochemistry-U-Satyanaryan-4th-Edition.pdf",
+    "fileName": "Biochemistry-U-Satyanaryan-4th-Edition.pdf"
+  },
+  {
+    "subject": "anatomy",
+    "title": "Abraham & McMinn's Clinical Atlas of Human Anatomy",
+    "author": "Peter Abrahams, Jonathan Spratt, Marios Loukas",
+    "edition": "8th Edition",
+    "description": "A comprehensive photographic atlas of human anatomy with clinical relevance — excellent visual companion for Gross Anatomy dissections.",
+    "filePath": "/files/books/anatomy/Abraham-McMinns-Clinical-Atlas-of-Human-Anatomy-8th-Ed.pdf",
+    "fileName": "Abraham-McMinns-Clinical-Atlas-of-Human-Anatomy-8th-Ed.pdf"
+  },
+  {
+    "subject": "neuroanatomy",
+    "title": "Clinical Neuroanatomy",
+    "author": "Richard S. Snell",
+    "edition": "8th Edition",
+    "description": "A clear, student-friendly introduction to neuroanatomy with clinical notes and self-assessment. Essential reference for the Neuroanatomy portion of Anatomy.",
+    "filePath": "/files/books/neuroanatomy/Snells-Clinical-Neuroanatomy-8th-Edition.pdf",
+    "fileName": "Snells-Clinical-Neuroanatomy-8th-Edition.pdf"
+  },
+  {
+    "subject": "embryology",
+    "title": "Langman's Medical Embryology",
+    "author": "T.W. Sadler",
+    "edition": "14th Edition",
+    "description": "The classic, concise embryology text with clinically oriented examples and full-colour diagrams. A standard reference for the Embryology module.",
+    "filePath": "/files/books/embryology/Langmans-Medical-Embryology-14th-Ed.pdf",
+    "fileName": "Langmans-Medical-Embryology-14th-Ed.pdf"
+  }
+]

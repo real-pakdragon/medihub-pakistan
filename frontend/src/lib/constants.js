@@ -9,6 +9,35 @@ export const CATEGORIES = [
 
 export const CATEGORY_LABELS = Object.fromEntries(CATEGORIES.map((c) => [c.value, c.label]));
 
+export const CONTENT_TYPES = ['book', 'pdf', 'ppt', 'link', 'video', 'file', 'image'];
+
+export const CONTENT_TYPE_LABELS = {
+  book: 'Book',
+  pdf: 'PDF',
+  ppt: 'Presentation (PPT)',
+  link: 'External Link',
+  video: 'Video',
+  file: 'File',
+  image: 'Image',
+};
+
+export const CATEGORY_ICON_OPTIONS = [
+  'stethoscope',
+  'activity',
+  'dna',
+  'microscope',
+  'pill',
+  'brain',
+  'scanner',
+  'clipboard-check',
+  'book-open',
+  'file-text',
+  'folder',
+  'play-circle',
+  'users',
+  'library',
+];
+
 export const LINK_TYPES = ['drive', 'whatsapp', 'youtube', 'pdf', 'website'];
 
 export const MDCAT_SUBJECTS = ['Biology', 'Chemistry', 'Physics', 'English', 'Logical Reasoning'];

@@ -6,7 +6,8 @@ import { SITE, SOCIALS } from '../../lib/constants.js';
 
 const NAV_LINKS = [
   { to: '/', label: 'Home', end: true },
-  { to: '/mbbs', label: 'MBBS Library' },
+  { to: '/mbbs', label: 'MBBS' },
+  { to: '/mdcat-res', label: 'MDCAT RES' },
   { to: '/mdcat', label: 'MDCAT Prep' },
   { to: '/about', label: 'About' },
   { to: '/contact', label: 'Contact' },

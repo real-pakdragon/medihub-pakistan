@@ -17,9 +17,18 @@ export function getStoredToken() {
   }
 }
 
+function isAdminAuthFailure(path, status) {
+  return status === 401 && !path.startsWith('/admin/login') && Boolean(getStoredToken());
+}
+
 export function setStoredToken(token) {
   if (token) localStorage.setItem('medihub_admin_token', token);
   else localStorage.removeItem('medihub_admin_token');
+}
+
+function redirectToAdminLogin() {
+  setStoredToken(null);
+  if (typeof window !== 'undefined') window.location.assign('/admin/login');
 }
 
 async function request(path, { method = 'GET', body } = {}) {
@@ -44,6 +53,7 @@ async function request(path, { method = 'GET', body } = {}) {
   }
 
   if (!res.ok) {
+    if (isAdminAuthFailure(path, res.status)) redirectToAdminLogin();
     const message = payload?.error?.message ?? `Request failed with status ${res.status}`;
     throw new ApiError(message, res.status, payload?.error?.details);
   }
@@ -57,4 +67,31 @@ export const api = {
   put: (path, body) => request(path, { method: 'PUT', body }),
   patch: (path, body) => request(path, { method: 'PATCH', body }),
   del: (path) => request(path, { method: 'DELETE' }),
+  upload: (path, formData) => uploadRequest(path, formData),
 };
+
+async function uploadRequest(path, formData) {
+  const token = getStoredToken();
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+
+  const text = await res.text();
+  let payload = null;
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      payload = null;
+    }
+  }
+
+  if (!res.ok) {
+    if (isAdminAuthFailure(path, res.status)) redirectToAdminLogin();
+    const message = payload?.error?.message ?? `Upload failed with status ${res.status}`;
+    throw new ApiError(message, res.status, payload?.error?.details);
+  }
+  return payload;
+}

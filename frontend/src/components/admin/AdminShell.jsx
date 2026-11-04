@@ -1,14 +1,15 @@
 import { useEffect } from 'react';
 import { Link, NavLink, Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, CalendarClock, ExternalLink, Inbox, Library, LogOut, Users } from 'lucide-react';
+import { ArrowLeft, BookMarked, CalendarClock, ExternalLink, Inbox, Library, LogOut, Users } from 'lucide-react';
 
 import { logoutAdmin, useIsAuthenticated } from '../../hooks/queries.js';
 import { getStoredToken, api } from '../../api/client.js';
 import { useQuery } from '@tanstack/react-query';
 
 const TABS = [
-  { to: '/admin/resources', label: 'Resources', icon: Library },
+  { to: '/admin/library', label: 'MBBS', icon: Library },
+  { to: '/admin/mdcat-res', label: 'MDCAT RES', icon: BookMarked },
   { to: '/admin/messages', label: 'Messages', icon: Inbox },
   { to: '/admin/subscribers', label: 'Subscribers', icon: Users },
   { to: '/admin/mdcat', label: 'MDCAT Config', icon: CalendarClock },

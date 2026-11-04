@@ -17,6 +17,90 @@ enum ResourceCategory {
   textbook
 }
 
+enum Section {
+  mbbs
+  mdcat
+}
+
+enum ContentType {
+  book
+  pdf
+  ppt
+  link
+  video
+  file
+  image
+}
+
+model Category {
+  id           String     @id @default(cuid())
+  section      Section    @default(mbbs)
+  name         String
+  slug         String     @unique
+  description  String?
+  iconName     String?    @map("icon_name")
+  parentId     String?    @map("parent_id")
+  parent       Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children     Category[] @relation("CategoryTree")
+  displayOrder Int        @default(0) @map("display_order")
+  isPublished  Boolean    @default(true) @map("is_published")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  items ContentItem[]
+  posts Post[]
+
+  @@index([section, parentId])
+  @@index([parentId])
+  @@index([displayOrder])
+  @@map("categories")
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  section     Section  @default(mbbs)
+  title       String
+  categoryId  String   @map("category_id")
+  body        String   @db.Text
+  isPublished Boolean  @default(true) @map("is_published")
+  displayOrder Int     @default(0) @map("display_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([section, categoryId])
+  @@index([categoryId])
+  @@index([isPublished, createdAt])
+  @@map("posts")
+}
+
+model ContentItem {
+  id          String      @id @default(cuid())
+  section     Section     @default(mbbs)
+  title       String
+  type        ContentType
+  categoryId  String      @map("category_id")
+  description String?
+  author      String?
+  edition     String?
+  fileName    String?     @map("file_name")
+  filePath    String?     @map("file_path")
+  url         String?
+  fileSize    Int?        @map("file_size")
+  isPublished Boolean     @default(true) @map("is_published")
+  displayOrder Int        @default(0) @map("display_order")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([section, categoryId])
+  @@index([categoryId])
+  @@index([isPublished, createdAt])
+  @@map("content_items")
+}
+
 enum MessageStatus {
   new
   read
@@ -38,6 +122,40 @@ model Resource {
   @@index([category])
   @@index([isPublished, createdAt])
   @@map("resources")
+}
+
+model Subject {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  iconName     String?  @map("icon_name")
+  description  String?
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  books Book[]
+
+  @@map("subjects")
+}
+
+model Book {
+  id          String   @id @default(cuid())
+  title       String
+  subjectId   String   @map("subject_id")
+  author      String?
+  edition     String?
+  description String?
+  fileName    String   @map("file_name")
+  filePath    String   @map("file_path")
+  isPublished Boolean  @default(false) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@index([subjectId])
+  @@index([isPublished, createdAt])
+  @@map("books")
 }
 
 model ContactMessage {

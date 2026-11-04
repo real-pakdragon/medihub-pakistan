@@ -138,6 +138,46 @@ const SAMPLE_RESOURCES = [
   },
 ];
 
+const CATEGORIES = [
+  { name: 'Anatomy', slug: 'anatomy', iconName: 'stethoscope', displayOrder: 1 },
+  { name: 'Gross Anatomy', slug: 'gross_anatomy', parentSlug: 'anatomy', iconName: 'stethoscope', displayOrder: 2 },
+  { name: 'Histology', slug: 'histology', parentSlug: 'anatomy', iconName: 'microscope', displayOrder: 3 },
+  { name: 'Embryology', slug: 'embryology', parentSlug: 'anatomy', iconName: 'dna', displayOrder: 4 },
+  { name: 'Neuroanatomy & Neurophysiology', slug: 'neuroanatomy', parentSlug: 'anatomy', iconName: 'brain', displayOrder: 5 },
+  { name: 'Radiologic Anatomy', slug: 'radiologic_anatomy', parentSlug: 'anatomy', iconName: 'scanner', displayOrder: 6 },
+  { name: 'Physiology', slug: 'physiology', iconName: 'activity', displayOrder: 7 },
+  { name: 'Biochemistry', slug: 'biochemistry', iconName: 'dna', displayOrder: 8 },
+  { name: 'Pathology', slug: 'pathology', iconName: 'microscope', displayOrder: 9 },
+  { name: 'Pharmacology', slug: 'pharmacology', iconName: 'pill', displayOrder: 10 },
+  { name: 'Preventive Medicine & Research', slug: 'preventive_medicine', iconName: 'clipboard-check', displayOrder: 11 },
+  { name: 'Emergency Medicine', slug: 'emergency_medicine', iconName: 'stethoscope', displayOrder: 12 },
+];
+
+const CMS_ITEMS = [
+  {
+    title: 'Guyton & Hall Textbook of Medical Physiology',
+    type: 'book',
+    categorySlug: 'physiology',
+    author: 'John E. Hall & Michael E. Hall',
+    edition: '14th Edition (2021)',
+    description:
+      'The definitive medical physiology textbook — comprehensive, exam-aligned coverage of every system with clinical correlations. Essential for first-year MBBS.',
+    fileName: 'Guyton-and-Hall-Textbook-of-Medical-Physiology-14th-2021.pdf',
+    filePath: '/files/books/physiology/Guyton-and-Hall-Textbook-of-Medical-Physiology-14th-2021.pdf',
+  },
+  {
+    title: 'Clinical Anatomy by Regions',
+    type: 'book',
+    categorySlug: 'anatomy',
+    author: 'Richard S. Snell',
+    edition: '10th Edition',
+    description:
+      'Regional anatomy made practical — clear dissections, surface anatomy, and clinical applications. A foundational text for first-year Anatomy.',
+    fileName: 'Snell-Clinical-Anatomy-by-Regions-10th-Ed.pdf',
+    filePath: '/files/books/anatomy/Snell-Clinical-Anatomy-by-Regions-10th-Ed.pdf',
+  },
+];
+
 const PRACTICE_QUESTIONS = [
   // ---------------- Biology ----------------
   {
@@ -313,11 +353,46 @@ async function main() {
   }
 
   const resourceCount = await prisma.resource.count();
-  if (resourceCount === 0) {
-    await prisma.resource.createMany({ data: SAMPLE_RESOURCES.map((r) => ({ ...r, isPublished: true })) });
-    console.log(`  ${SAMPLE_RESOURCES.length} sample resources created`);
-  } else {
-    console.log(`  resources table already has ${resourceCount} rows — skipping sample data`);
+  if (resourceCount > 0) {
+    await prisma.resource.deleteMany({});
+    console.log(`  cleared ${resourceCount} legacy sample resources — MBBS library now starts fresh`);
+  }
+
+  for (const c of CATEGORIES) {
+    const found = await prisma.category.findUnique({ where: { slug: c.slug } });
+    if (!found) {
+      const { parentSlug, ...data } = c;
+      const parent = parentSlug ? await prisma.category.findUnique({ where: { slug: parentSlug } }) : null;
+      await prisma.category.create({
+        data: { ...data, parentId: parent?.id ?? null },
+      });
+      console.log(`  category ready → ${c.name}`);
+    }
+  }
+
+  for (const item of CMS_ITEMS) {
+    const category = await prisma.category.findUnique({ where: { slug: item.categorySlug } });
+    if (!category) {
+      console.warn(`  skipping item "${item.title}" — category ${item.categorySlug} not found`);
+      continue;
+    }
+    const existing = await prisma.contentItem.findFirst({ where: { filePath: item.filePath } });
+    if (!existing) {
+      await prisma.contentItem.create({
+        data: {
+          title: item.title,
+          type: item.type,
+          categoryId: category.id,
+          author: item.author,
+          edition: item.edition,
+          description: item.description,
+          fileName: item.fileName,
+          filePath: item.filePath,
+          isPublished: true,
+        },
+      });
+      console.log(`  item ready → ${item.title}`);
+    }
   }
 
   const practiceCount = await prisma.practiceQuestion.count();

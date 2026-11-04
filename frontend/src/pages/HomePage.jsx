@@ -10,9 +10,9 @@ const FEATURES = [
   {
     to: '/mbbs',
     icon: BookOpen,
-    title: 'MBBS Resource Library',
+    title: 'MBBS',
     description:
-      'Year-wise notes, clinical rotation guides, ten years of past papers and standard textbook references — curated and organised.',
+      'Year-wise notes, clinical rotation guides, explanations and standard textbook references — curated and organised.',
     cta: 'Browse the library',
   },
   {
@@ -92,7 +92,7 @@ export function HomePage() {
             </p>
             <div className="mt-9 flex flex-wrap justify-center gap-3">
               <Link to="/mbbs" className="btn-primary !px-7 !py-3">
-                Explore MBBS Library <ArrowRight size={16} aria-hidden="true" />
+                Explore MBBS <ArrowRight size={16} aria-hidden="true" />
               </Link>
               <Link to="/mdcat" className="btn-outline !px-7 !py-3">
                 MDCAT Early Access

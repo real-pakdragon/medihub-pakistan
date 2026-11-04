@@ -21,12 +21,15 @@ export const adminService = {
   },
 
   async dashboardStats() {
-    const [resources, messages, newMessages, subscribers] = await prisma.$transaction([
+    const [resources, messages, newMessages, subscribers, categories, contentItems, posts] = await prisma.$transaction([
       prisma.resource.count(),
       prisma.contactMessage.count(),
       prisma.contactMessage.count({ where: { status: 'new' } }),
       prisma.subscriber.count(),
+      prisma.category.count(),
+      prisma.contentItem.count(),
+      prisma.post.count(),
     ]);
-    return { resources, messages, newMessages, subscribers };
+    return { resources, messages, newMessages, subscribers, categories, contentItems, posts };
   },
 };

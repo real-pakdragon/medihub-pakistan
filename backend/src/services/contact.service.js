@@ -7,7 +7,22 @@ const newToken = () => randomBytes(32).toString('hex');
 
 export const contactService = {
   async submitMessage({ name, email, subject, message }) {
-    return prisma.contactMessage.create({ data: { name, email, subject, message } });
+    const saved = await prisma.contactMessage.create({ data: { name, email, subject, message } });
+    await this.pruneMessages();
+    return saved;
+  },
+
+  async pruneMessages() {
+    await prisma.contactMessage.deleteMany({ where: { status: 'replied' } });
+    const keep = await prisma.contactMessage.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: { id: true },
+    });
+    const keepIds = keep.map((m) => m.id);
+    if (keepIds.length) {
+      await prisma.contactMessage.deleteMany({ where: { id: { notIn: keepIds } } });
+    }
   },
 
   async listMessages({ status, page, limit }) {
@@ -27,7 +42,11 @@ export const contactService = {
   async updateStatus(id, status) {
     const existing = await prisma.contactMessage.findUnique({ where: { id } });
     if (!existing) return null;
-    return prisma.contactMessage.update({ where: { id }, data: { status } });
+    const updated = await prisma.contactMessage.update({ where: { id }, data: { status } });
+    if (status === 'replied') {
+      await this.pruneMessages();
+    }
+    return updated;
   },
 };
 
