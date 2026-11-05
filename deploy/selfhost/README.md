@@ -99,6 +99,9 @@ Sign in with:
 To add your books: log in, open **MBBS → Files & Content**, and upload the PDFs.
 Files are saved on the old PC's hard drive.
 
+Big files are uploaded in small pieces automatically, so even a 500 MB PDF works
+through Cloudflare. Keep the browser tab open until the percentage reaches 100%.
+
 ---
 
 ## Where your data is stored

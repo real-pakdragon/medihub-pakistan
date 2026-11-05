@@ -201,8 +201,9 @@ export function useDeleteItem(section = 'mbbs') {
 }
 
 export function useUploadFile(section = 'mbbs') {
+  const base = `/admin/${LIBRARY_SECTIONS[section].adminRoot}`;
   return useMutation({
-    mutationFn: (formData) => api.upload(`/admin/${LIBRARY_SECTIONS[section].adminRoot}/upload`, formData),
+    mutationFn: ({ file, onProgress }) => api.uploadFile(base, file, onProgress),
   });
 }
 

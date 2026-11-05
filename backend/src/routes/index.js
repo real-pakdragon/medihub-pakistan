@@ -1,6 +1,7 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 
 import { resourceController, adminResourceController } from '../controllers/resource.controller.js';
+import { uploadController } from '../controllers/upload.controller.js';
 import { bookController } from '../controllers/book.controller.js';
 import { libraryController } from '../controllers/library.controller.js';
 import { mdcatController } from '../controllers/mdcat.controller.js';
@@ -149,6 +150,16 @@ const sectionAdmin = (section) => {
       },
     });
   });
+
+  // Chunked upload for large files (works through Cloudflare's 100 MB limit).
+  r.post('/uploads', uploadController.init);
+  r.post(
+    '/uploads/:uploadId/chunks/:index',
+    express.raw({ type: () => true, limit: '32mb' }),
+    uploadController.chunk
+  );
+  r.post('/uploads/:uploadId/complete', uploadController.complete);
+  r.delete('/uploads/:uploadId', uploadController.abort);
 
   return r;
 };

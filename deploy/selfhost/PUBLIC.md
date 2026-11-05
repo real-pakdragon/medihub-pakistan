@@ -142,16 +142,33 @@ https://your-domain/admin/login
 
 Files are saved on the Fedora PC's disk. Keep the PC on while uploading.
 
-### Big files: the 100 MB limit
+### Big files (over 100 MB)
 
-Cloudflare's free plan rejects uploads over **100 MB**. The app itself allows
-1 GB, so:
+Cloudflare's free plan rejects any single request over **100 MB**. The app works
+around this automatically: files larger than 90 MB are cut into **20 MB pieces**
+and sent one at a time, then joined on the server. The admin panel shows a
+percentage while this happens.
 
-- Keep PDFs under about 90 MB (compress them — most scanned books can shrink a
-  lot), **or**
-- Upload big files while connected to the **same Wi-Fi** as the Fedora PC, using
-  the local address (`http://192.168.x.x/admin/login`). That traffic never goes
-  through Cloudflare.
+- Works through Cloudflare, no compression needed.
+- The app's own limit is **1 GB per file**.
+- Weak connections: each piece is retried up to 4 times, so a small drop does
+  not fail the whole upload.
+- Abandoned pieces are removed automatically after 24 hours.
+
+Compressing a PDF is still useful to save disk space and make downloads faster,
+but it is no longer required to get past 100 MB.
+
+> This requires the latest version of the code. On the Fedora PC run:
+>
+> ```bash
+> cd ~/medihub-pakistan
+> git pull
+> cd deploy/selfhost
+> sudo docker compose -f docker-compose.yml up -d --build
+> ```
+>
+> (If you installed with the tarball method, download and extract the newest
+> tarball again instead of `git pull`.)
 
 Check free disk space now and then:
 

@@ -223,6 +223,7 @@ function ItemFormModal({ initial, categories, onClose, section = 'mbbs' }) {
   const updateItem = useUpdateItem(section);
 
   const [errors, setErrors] = useState({});
+  const [uploadProgress, setUploadProgress] = useState(null);
   const [form, setForm] = useState(() => ({ ...EMPTY_ITEM, ...initial }));
 
   const setField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
@@ -230,11 +231,10 @@ function ItemFormModal({ initial, categories, onClose, section = 'mbbs' }) {
 
   const handleFile = async (file) => {
     if (!file) return;
-    const fd = new FormData();
-    fd.append('file', file);
     try {
       setErrors((e) => ({ ...e, filePath: '' }));
-      const res = await uploadFile.mutateAsync(fd);
+      setUploadProgress(0);
+      const res = await uploadFile.mutateAsync({ file, onProgress: setUploadProgress });
       setForm((f) => ({
         ...f,
         fileName: res.data.fileName,
@@ -247,6 +247,9 @@ function ItemFormModal({ initial, categories, onClose, section = 'mbbs' }) {
     } catch (err) {
       toast.error(err?.message ?? 'Upload failed');
       setErrors((e) => ({ ...e, filePath: err?.message ?? 'Upload failed' }));
+    } finally {
+      setUploadProgress(null);
+      if (fileRef.current) fileRef.current.value = '';
     }
   };
 
@@ -389,9 +392,28 @@ function ItemFormModal({ initial, categories, onClose, section = 'mbbs' }) {
               </div>
               <input ref={fileRef} type="file" className="hidden" onChange={(e) => handleFile(e.target.files?.[0])} />
               <button type="button" className="btn-secondary !px-4 !py-2 text-xs" onClick={() => fileRef.current?.click()} disabled={uploadFile.isPending}>
-                <FileUp size={14} aria-hidden="true" /> {uploadFile.isPending ? 'Uploading…' : 'Upload file'}
+                <FileUp size={14} aria-hidden="true" />{' '}
+                {uploadProgress != null
+                  ? `Uploading ${uploadProgress}%`
+                  : uploadFile.isPending
+                    ? 'Uploading…'
+                    : 'Upload file'}
               </button>
             </div>
+            {uploadProgress != null && (
+              <div className="mt-3" aria-live="polite">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className="h-full rounded-full bg-brand transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-xs text-slate-500">
+                  {uploadProgress}% uploaded — large files are sent in small pieces, so a dropped
+                  connection does not lose everything.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="sm:col-span-2">
