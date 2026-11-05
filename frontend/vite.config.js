@@ -5,6 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    // Allow Cloudflare quick-tunnel hostnames (used to demo the site remotely).
+    allowedHosts: ['.trycloudflare.com'],
     proxy: {
       '/api': {
         target: process.env.VITE_PROXY_TARGET ?? 'http://localhost:5000',
