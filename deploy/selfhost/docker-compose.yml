@@ -1,6 +1,6 @@
 name: medihub
 
-# Self-hosting on your own PC (Manjaro / Arch Linux).
+# Self-hosting on your own PC (Fedora / Linux).
 # Run it with:  bash deploy/selfhost/setup.sh
 # The data lives here:
 #   database -> Docker volume "medihub_pgdata"
@@ -49,7 +49,8 @@ services:
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-ChangeMe!2024}
       # Email is optional. Leave SMTP_* unset and messages are only logged.
     volumes:
-      - ./data/files:/app/data/files
+      # ":z" lets Fedora's SELinux allow the container to write uploads here.
+      - ./data/files:/app/data/files:z
     # Only create the admin login on first run - no sample content.
     command: sh -c "npx prisma migrate deploy && node prisma/bootstrap.js && node src/server.js"
     depends_on:

@@ -1,4 +1,4 @@
-# Hosting MediHub on your own PC (Manjaro)
+# Hosting MediHub on your own PC (Fedora)
 
 This guide is written in plain English. You only need to copy and paste a few
 commands. Nothing here deletes anything on your PC.
@@ -7,30 +7,33 @@ commands. Nothing here deletes anything on your PC.
 
 ## What you need
 
-- The old PC with **Manjaro** turned on and connected to the internet.
-- About **30 minutes** for the first setup (it builds the website).
+- The old PC with **Fedora** turned on and connected to the internet.
+- About **30–40 minutes** for the first setup (it builds the website).
 - The PC should stay **awake** while the website is running.
 
----
-
-## Step 1 - Open the Terminal
-
-On Manjaro, press the **Super** key (Windows key), type `Terminal`, and open it.
+> This guide is for **Fedora Workstation**. If you installed Fedora Silverblue
+> or Kinoite, stop here and ask first — the steps are different.
 
 ---
 
-## Step 2 - Install Git (only if it is missing)
+## Step 1 — Open the Terminal
 
-Copy this line, paste it in the Terminal, press **Enter**, and type your password
-when asked:
+Press the **Super** key (Windows key), type `Terminal`, and open it.
+
+---
+
+## Step 2 — Install Git (only if it is missing)
+
+Copy this line, paste it in the Terminal, press **Enter**, and type your
+password when asked:
 
 ```bash
-sudo pacman -S --needed git
+sudo dnf install -y git
 ```
 
 ---
 
-## Step 3 - Download the website
+## Step 3 — Download the website
 
 Copy and paste:
 
@@ -43,7 +46,7 @@ This creates a folder called `medihub-pakistan` in your home folder.
 
 ---
 
-## Step 4 - Start the setup
+## Step 4 — Start the setup
 
 Copy and paste these two lines:
 
@@ -52,24 +55,30 @@ cd ~/medihub-pakistan
 bash deploy/selfhost/setup.sh
 ```
 
-The script will ask for your password (for installing Docker) and then do
-everything automatically. **The first run can take 10-20 minutes.** You will see
-a lot of text - that is normal.
+The script will:
+
+1. install Docker,
+2. add swap (because the PC has little RAM),
+3. open the website port in Fedora's firewall,
+4. build and start the website.
+
+**The first run can take 20–40 minutes.** You will see a lot of text — that is
+normal. Do not close the Terminal.
 
 When it finishes, it prints something like:
 
 ```
  Website is running
-   On this PC   : http://localhost
+   On this PC    : http://localhost
    On your Wi-Fi : http://192.168.1.20
-   Admin login  : http://192.168.1.20/admin/login
-   Admin email  : admin@medihub.pk
+   Admin login   : http://192.168.1.20/admin/login
+   Admin email   : admin@medihub.pk
    Admin password: ChangeMe!2024
 ```
 
 ---
 
-## Step 5 - Use the website
+## Step 5 — Use the website
 
 - On the old PC: open a browser and go to **http://localhost**
 - On your phone/another PC on the same Wi-Fi: use the address the script printed.
@@ -87,7 +96,7 @@ Sign in with:
 > bash reset-password.sh
 > ```
 
-To add your books: log in, open **MBBS -> Files & Content**, and upload the PDFs.
+To add your books: log in, open **MBBS → Files & Content**, and upload the PDFs.
 Files are saved on the old PC's hard drive.
 
 ---
@@ -155,11 +164,10 @@ sudo docker compose -f docker-compose.yml logs -f api
 
 ## Keep the PC awake
 
-If the PC sleeps, the website goes offline. In Manjaro:
+If the PC sleeps, the website goes offline. In Fedora:
 
-**Settings -> Power Management ->** turn off automatic sleep/suspend.
-
-Also make sure the PC does not shut down when the lid closes, if it is a laptop.
+**Settings → Power →** turn off **Automatic Suspend**.
+On a laptop, also set **"Power Button Behavior"** / lid close to **Do nothing**.
 
 ---
 
@@ -179,7 +187,21 @@ the exact steps will be prepared for you.
 
 ## If something goes wrong
 
-**The page does not open**
+**The page does not open on another device**
+
+1. Make sure the device is on the **same Wi-Fi** (not mobile data).
+2. Check the host PC's address: `hostname -I`
+3. Check the firewall:
+   ```bash
+   sudo firewall-cmd --list-services
+   ```
+   `http` should be in the list. If not, run:
+   ```bash
+   sudo firewall-cmd --permanent --add-service=http
+   sudo firewall-cmd --reload
+   ```
+
+**The page does not open even on the host PC**
 
 1. Make sure Docker is running: `sudo systemctl status docker`
 2. Check the logs: `sudo docker compose -f docker-compose.yml logs -f api`
@@ -195,6 +217,17 @@ sudo docker compose -f docker-compose.yml up -d
 ```
 
 The site will then be at `http://localhost:8080`.
+
+**Uploads fail with a permission error (Fedora / SELinux)**
+
+The compose file already mounts the folder with the `:z` label so SELinux allows
+writes. If it still fails, check:
+
+```bash
+sudo ausearch -m avc -ts recent | tail -20
+```
+
+Send the output and it can be fixed precisely.
 
 **The PC restarted**
 

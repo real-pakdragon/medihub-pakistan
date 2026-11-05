@@ -19,7 +19,7 @@ medihub-pakistan/
 - **Backend**: layered routes → controllers → services, Zod validation, helmet, CORS allow-list, rate limiting on all public POSTs, consistent JSON error shape, HTML sanitisation on text inputs
 - **Emails** via Nodemailer SMTP (works with Resend/SendGrid): contact notification to admin + auto-reply to sender, double opt-in confirmation for subscribers. Without SMTP config, emails are logged to console instead of sent.
 
-## Host it on your own PC (Manjaro / Arch Linux)
+## Host it on your own PC (Fedora / Linux)
 
 No domain or cloud account needed to start. On the PC that will host the site:
 

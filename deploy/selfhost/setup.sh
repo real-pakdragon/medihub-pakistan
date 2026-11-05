@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# MediHub Pakistan - one-command setup for self-hosting on Manjaro / Arch Linux.
+# MediHub Pakistan - one-command setup for self-hosting on Fedora / Linux.
 # Usage:  bash deploy/selfhost/setup.sh
 set -euo pipefail
 
@@ -12,24 +12,40 @@ warn() { printf '\n\033[1;33m!!  %s\033[0m\n' "$1"; }
 # ---------------------------------------------------------------- 1. Docker
 if ! command -v docker >/dev/null 2>&1; then
   say "Installing Docker (you may be asked for your password)"
-  sudo pacman -S --needed --noconfirm docker docker-compose
-  sudo systemctl enable --now docker
-else
-  sudo systemctl enable --now docker >/dev/null 2>&1 || true
+  if command -v dnf >/dev/null 2>&1; then
+    # Official Docker install script: works on Fedora and includes Compose.
+    curl -fsSL https://get.docker.com | sudo sh
+  elif command -v pacman >/dev/null 2>&1; then
+    sudo pacman -S --needed --noconfirm docker docker-compose
+  elif command -v apt-get >/dev/null 2>&1; then
+    sudo apt-get update -y
+    sudo apt-get install -y docker.io docker-compose-v2
+  else
+    warn "Could not detect your package manager."
+    echo "   Install Docker manually, then run this script again."
+    exit 1
+  fi
 fi
 
-if ! docker compose version >/dev/null 2>&1; then
+sudo systemctl enable --now docker >/dev/null 2>&1 || true
+
+# Find a working compose command.
+if docker compose version >/dev/null 2>&1; then
+  COMPOSE=(sudo docker compose)
+elif command -v docker-compose >/dev/null 2>&1; then
+  COMPOSE=(sudo docker-compose)
+else
   warn "Docker Compose is missing."
-  echo "   Install it with:  sudo pacman -S docker-compose"
+  echo "   Fedora:  sudo dnf install -y docker-compose-plugin"
   echo "   Then run this script again."
   exit 1
 fi
 
 # ---------------------------------------------------------------- 2. Swap
 # The old PC has little RAM, so give it breathing room on disk.
-MEM_MB=$(awk '/MemTotal/{print int($2/1024)}' /proc/meminfo)
-if [ "$MEM_MB" -lt 8000 ] && ! swapon --show 2>/dev/null | grep -q .; then
-  say "Adding 4 GB swap (this PC has ${MEM_MB} MB RAM)"
+RAM_MB=$(awk '/MemTotal/{print int($2/1024)}' /proc/meminfo)
+if [ "$RAM_MB" -lt 8000 ] && [ ! -f /swapfile ]; then
+  say "Adding 4 GB swap (this PC has ${RAM_MB} MB RAM)"
   sudo fallocate -l 4G /swapfile 2>/dev/null || sudo dd if=/dev/zero of=/swapfile bs=1M count=4096 status=none
   sudo chmod 600 /swapfile
   sudo mkswap -q /swapfile
@@ -37,7 +53,15 @@ if [ "$MEM_MB" -lt 8000 ] && ! swapon --show 2>/dev/null | grep -q .; then
   grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab >/dev/null
 fi
 
-# ---------------------------------------------------------------- 3. Folders + settings
+# ---------------------------------------------------------------- 3. Firewall
+# Fedora enables firewalld. Open the website port (80) for other devices.
+if command -v firewall-cmd >/dev/null 2>&1 && systemctl is-active --quiet firewalld 2>/dev/null; then
+  say "Opening port 80 in the firewall"
+  sudo firewall-cmd --permanent --add-service=http >/dev/null 2>&1 || true
+  sudo firewall-cmd --reload >/dev/null 2>&1 || true
+fi
+
+# ---------------------------------------------------------------- 4. Folders + settings
 say "Creating folders"
 mkdir -p data/files backups
 
@@ -57,12 +81,12 @@ else
   say "Keeping the existing settings file (.env)"
 fi
 
-# ---------------------------------------------------------------- 4. Build + start
+# ---------------------------------------------------------------- 5. Build + start
 say "Building and starting the website"
 echo "   The first run can take 10-20 minutes on this PC. Please wait..."
-sudo docker compose --env-file .env -f docker-compose.yml up -d --build
+"${COMPOSE[@]}" --env-file .env -f docker-compose.yml up -d --build
 
-# ---------------------------------------------------------------- 5. Wait for it
+# ---------------------------------------------------------------- 6. Wait for it
 say "Waiting for the website to answer"
 ok=0
 for _ in $(seq 1 60); do
@@ -82,7 +106,7 @@ if [ "$ok" = "1" ]; then
   echo "   On your Wi-Fi        : http://$IP"
   echo "   Admin login          : http://$IP/admin/login"
   echo "   Admin email          : admin@medihub.pk"
-  echo "   Admin password       : ChangeMe!2024   <-- change it after login"
+  echo "   Admin password       : ChangeMe!2024   <-- change it with reset-password.sh"
   echo
   echo "   Backup               : bash $SCRIPT_DIR/backup.sh"
   echo "   Stop                 : sudo docker compose -f $SCRIPT_DIR/docker-compose.yml down"
