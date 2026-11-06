@@ -5,6 +5,9 @@ commands. Nothing here deletes anything on your PC.
 
 ---
 
+> Want to run the PC with no monitor or keyboard and manage it from your laptop
+> anywhere? Follow [`REMOTE.md`](REMOTE.md) after the first setup.
+
 ## What you need
 
 - The old PC with **Fedora** turned on and connected to the internet.
